@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using System.IO;
 
-namespace DnDSekai.Core.Config
+namespace DnDSekai.Core
 {
     class Config
     {
@@ -20,7 +20,6 @@ namespace DnDSekai.Core.Config
             if (!File.Exists($"{configFolder}/{configFile}"))
             {
                 bot = new BotConfig();
-                bot.users = new Dictionary<ulong, bool>();
                 string json = JsonConvert.SerializeObject(bot, Formatting.Indented);
                 File.WriteAllText($"{configFolder}/{configFile}", json);
             }
@@ -31,15 +30,9 @@ namespace DnDSekai.Core.Config
             }
         }
 
-        public static void AddUser(ulong id)
+        public static void ChangeWorld(string name)
         {
-            bot.users.Add(id, true);
-            SaveConfig();
-        }
-
-        public static void RemoveUser(ulong id)
-        {
-            bot.users.Remove(id);
+            bot.worldName = name;
             SaveConfig();
         }
 
@@ -54,7 +47,6 @@ namespace DnDSekai.Core.Config
         public string token;
         public string cmdPrefix;
         public string worldName;
-
-        public Dictionary<ulong, bool> users;
+        public int delay;
     }
 }

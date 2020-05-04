@@ -5,15 +5,22 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DnDSekai.Core.Config;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace DnDSekai.Discord
+namespace DnDSekai.Core
 {
     public class CommandHandler
     {
-        private readonly CommandService _commands;
+        private static CommandService _commands;
         private readonly DiscordSocketClient _client;
         private readonly IServiceProvider _services;
+
+        public static List<CommandInfo> GetCommandInfo()
+        {
+            List<CommandInfo> commands = _commands.Commands.ToList();
+            return commands;
+        }
 
         public CommandHandler(IServiceProvider services)
         {
@@ -49,15 +56,46 @@ namespace DnDSekai.Discord
 
 
             // Determine if the message has a valid prefix, and adjust argPos based on prefix
-            if (!message.HasStringPrefix(Config.bot.cmdPrefix, ref argPos))
+            if (Users.users.ContainsKey(message.Author.Id))
+            {
+                if (Users.users[message.Author.Id].prefix && !message.HasStringPrefix(Config.bot.cmdPrefix, ref argPos))
+                {
+                    return;
+                }
+            }
+            else if (!message.HasStringPrefix(Config.bot.cmdPrefix, ref argPos))
             {
                 return;
             }
 
             var context = new SocketCommandContext(_client, message);
 
-            // Execute command if one is found that matches
-            await _commands.ExecuteAsync(context, argPos, _services);
+            if (Users.users.ContainsKey(message.Author.Id) && message.Content.Contains(Users.users[message.Author.Id].shortcutSymbol))
+            {
+                string[] words = message.Content.Split(' ');
+                string newContent = "";
+
+                foreach (string s in words)
+                {
+                    string code = s.Substring(s.IndexOf(Users.users[message.Author.Id].shortcutSymbol) + 1);
+
+                    if (s.Contains(Users.users[message.Author.Id].shortcutSymbol) && Users.users[message.Author.Id].shortcuts.ContainsKey(code))
+                        newContent += s.Replace(Users.users[message.Author.Id].shortcutSymbol + code, Users.users[message.Author.Id].shortcuts[code]) + " ";
+                    else
+                        newContent += s + " ";
+                }
+
+                if(newContent.StartsWith("!"))
+                    newContent = newContent[1..^1];
+                else
+                    newContent = newContent[0..^1];
+
+                await _commands.ExecuteAsync(context, newContent, _services);
+            }
+            else
+            {
+                await _commands.ExecuteAsync(context, argPos, _services);
+            }
         }
 
         public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)

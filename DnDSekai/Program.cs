@@ -6,9 +6,7 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Discord;
 
-using DnDSekai.Core.Config;
 using DnDSekai.Core;
-using DnDSekai.Discord;
 
 namespace DnDSekai
 {
@@ -26,8 +24,6 @@ namespace DnDSekai
             var services = ConfigureServices();
             var client = services.GetRequiredService<DiscordSocketClient>();
             _client = client;
-
-
 
             client.Log += LogAsync;
             client.Ready += ReadyAsync;
