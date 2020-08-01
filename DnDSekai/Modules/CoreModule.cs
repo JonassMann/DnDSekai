@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using DnDSekai.Core;
+using DnDSekai.Data;
 using Discord.Commands;
 using Discord;
 
@@ -9,7 +10,7 @@ namespace DnDSekai.Modules
 {
     public class CoreModule : ModuleBase<SocketCommandContext>
     {
-        [Command("adduser", RunMode = RunMode.Async)]
+        [Command("AddUser", RunMode = RunMode.Async)]
         [Summary("Adds user to user list")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task AddUser(ulong id)
@@ -22,7 +23,7 @@ namespace DnDSekai.Modules
             await Context.Message.DeleteAsync();
         }
 
-        [Command("removeuser", RunMode = RunMode.Async)]
+        [Command("RemoveUser", RunMode = RunMode.Async)]
         [Summary("Removes user from user list")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task RemoveUser(ulong id)
@@ -35,7 +36,7 @@ namespace DnDSekai.Modules
             await Context.Message.DeleteAsync();
         }
 
-        [Command("world", RunMode = RunMode.Async)]
+        [Command("World", RunMode = RunMode.Async)]
         [Summary("Changes current world")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task World([Remainder]string world)
@@ -48,7 +49,7 @@ namespace DnDSekai.Modules
             await Context.Message.DeleteAsync();
         }
 
-        [Command("prefix", RunMode = RunMode.Async)]
+        [Command("Prefix", RunMode = RunMode.Async)]
         [Summary("Toggles usage of prefix")]
         public async Task TogglePrefix()
         {
@@ -70,8 +71,7 @@ namespace DnDSekai.Modules
             }
         }
 
-        [Command("addshortcut", RunMode = RunMode.Async)]
-        [Alias("asc")]
+        [Command("AddShortcut", RunMode = RunMode.Async)]
         [Summary("Adds a shortcut for user")]
         public async Task AddShortCut(string sc, string lc)
         {
@@ -93,8 +93,7 @@ namespace DnDSekai.Modules
             }
         }
 
-        [Command("removeshortcut", RunMode = RunMode.Async)]
-        [Alias("rsc")]
+        [Command("RemoveShortcut", RunMode = RunMode.Async)]
         [Summary("Removes shortcut from user")]
         public async Task RemoveShortcut(string sc)
         {
@@ -116,9 +115,8 @@ namespace DnDSekai.Modules
             }
         }
 
-        [Command("changeshortcut", RunMode = RunMode.Async)]
-        [Alias("csc")]
-        [Summary("Changes shortcut marker for user")]
+        [Command("ChangeShortcut", RunMode = RunMode.Async)]
+        [Summary("Changes shortcut symbol for user")]
         public async Task ChangeShortcut(string symbol)
         {
             ulong id = Context.Message.Author.Id;
@@ -139,9 +137,56 @@ namespace DnDSekai.Modules
             }
         }
 
-        [Command("help")]
+        [Command("SetWork", RunMode = RunMode.Async)]
+        [Summary("Changes work variables")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task SetWorkVariables(string path, string name)
+        {
+            Config.SetWorkPath(path);
+            Config.SetWorkName(name);
+            await Context.Channel.SendMessageAsync($"Work path: {Config.workPath}\nWork name: {Config.workName}");
+        }
+
+        [Command("SetWorkPath", RunMode = RunMode.Async)]
+        [Summary("Changes work path")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task SetWorkPath(string path)
+        {
+            Config.SetWorkPath(path);
+            await Context.Channel.SendMessageAsync($"Work path: {Config.workPath}\nWork name: {Config.workName}");
+        }
+
+        [Command("SetWorkName", RunMode = RunMode.Async)]
+        [Summary("Changes work path")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task SetWorkName(string name)
+        {
+            Config.SetWorkName(name);
+            await Context.Channel.SendMessageAsync($"Work path: {Config.workPath}\nWork name: {Config.workName}");
+        }
+
+        [Command("ResetWork", RunMode = RunMode.Async)]
+        [Summary("Changes work type")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task ResetWork()
+        {
+            Config.ResetWork();
+            await Context.Channel.SendMessageAsync($"Work path: {Config.workPath}\nWork name: {Config.workName}");
+        }
+
+        [Command("LoadAll", RunMode = RunMode.Async)]
+        [Summary("Loads all files")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task LoadAll()
+        {
+            DataLoader.LoadAllData();
+            await Context.Channel.SendMessageAsync($"All data loaded");
+        }
+
+        [Command("Help")]
         [Summary("Lists commands and summaries")]
-        public async Task Help()
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Help(string start = "")
         {
             List<CommandInfo> commands = CommandHandler.GetCommandInfo();
 
@@ -156,16 +201,19 @@ namespace DnDSekai.Modules
 
             for (int i = 0; i < commands.Count; i++)
             {
-                string embedFieldText = commands[i].Summary ?? "No description available\n";
-                string name = commands[i].Name;
+                if (commands[i].Name.ToLower().StartsWith(start.ToLower()))
+                {
+                    string embedFieldText = commands[i].Summary ?? "No description available\n";
+                    string name = commands[i].Name;
 
-                for (int j = 1; j < commands[i].Aliases.Count; j++)
-                    name += $" ({commands[i].Aliases[j]})";
+                    for (int j = 1; j < commands[i].Aliases.Count; j++)
+                        name += $" ({commands[i].Aliases[j]})";
 
-                builder.AddField(name, embedFieldText);
-                counter++;
+                    builder.AddField(name, embedFieldText);
+                    counter++;
+                }
 
-                if (counter >= 20 || i == commands.Count-1)
+                if (counter >= 20 || i == commands.Count - 1)
                 {
                     counter = 0;
                     embed = builder.Build();

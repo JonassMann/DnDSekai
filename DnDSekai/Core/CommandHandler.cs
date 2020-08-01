@@ -54,7 +54,6 @@ namespace DnDSekai.Core
             // Sets the argument position away from the prefix we set
             var argPos = 0;
 
-
             // Determine if the message has a valid prefix, and adjust argPos based on prefix
             if (Users.users.ContainsKey(message.Author.Id))
             {
@@ -70,10 +69,14 @@ namespace DnDSekai.Core
 
             var context = new SocketCommandContext(_client, message);
 
-            if (Users.users.ContainsKey(message.Author.Id) && message.Content.Contains(Users.users[message.Author.Id].shortcutSymbol))
+            string newContent = message.Content;
+            if(newContent.StartsWith("!")) newContent = newContent.Substring(1);
+
+            if (Users.users.ContainsKey(message.Author.Id) && newContent.Contains(Users.users[message.Author.Id].shortcutSymbol))
             {
-                string[] words = message.Content.Split(' ');
-                string newContent = "";
+                string[] words = newContent.Split(' ');
+
+                newContent = "";
 
                 foreach (string s in words)
                 {
@@ -84,18 +87,11 @@ namespace DnDSekai.Core
                     else
                         newContent += s + " ";
                 }
-
-                if(newContent.StartsWith("!"))
-                    newContent = newContent[1..^1];
-                else
-                    newContent = newContent[0..^1];
-
-                await _commands.ExecuteAsync(context, newContent, _services);
+                
+                newContent = newContent[0..^1];
             }
-            else
-            {
-                await _commands.ExecuteAsync(context, argPos, _services);
-            }
+            
+            await _commands.ExecuteAsync(context, newContent, _services);
         }
 
         public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)

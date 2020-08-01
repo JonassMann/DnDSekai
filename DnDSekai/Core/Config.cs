@@ -12,8 +12,14 @@ namespace DnDSekai.Core
 
         public static BotConfig bot;
 
+        public static string workPath;
+        public static string workName;
+
         static Config() //Loads config info on startup
         {
+            workPath = "";
+            workName = "";
+
             if (!Directory.Exists(configFolder))
                 Directory.CreateDirectory(configFolder);
 
@@ -40,6 +46,22 @@ namespace DnDSekai.Core
         {
             File.WriteAllText($"{configFolder}/{configFile}", JsonConvert.SerializeObject(bot, Formatting.Indented));
         }
+
+        public static void SetWorkPath(string path)
+        {
+            workPath = $"Resources/{bot.worldName}/{path}";
+        }
+
+        public static void SetWorkName(string name)
+        {
+            workName = name;
+        }
+
+        public static void ResetWork()
+        {
+            workPath = "";
+            workName = "";
+        }
     }
 
     public struct BotConfig
@@ -47,6 +69,7 @@ namespace DnDSekai.Core
         public string token;
         public string cmdPrefix;
         public string worldName;
+        public string DMID;
         public int delay;
     }
 }
